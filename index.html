@@ -2,17 +2,433 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>Catatan Digital</title>
-  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #F2F2F7;
+      --surface: #FFFFFF;
+      --surface2: #F9F9FB;
+      --accent: #007AFF;
+      --accent-soft: #E8F1FF;
+      --danger: #FF3B30;
+      --danger-soft: #FFF0EF;
+      --warning: #FF9500;
+      --text-primary: #1C1C1E;
+      --text-secondary: #6E6E73;
+      --text-tertiary: #AEAEB2;
+      --separator: #E5E5EA;
+      --shadow: 0 2px 12px rgba(0,0,0,0.08);
+      --radius: 16px;
+      --radius-sm: 10px;
+    }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      max-width: 430px;
+      margin: 0 auto;
+      padding-bottom: 40px;
+    }
+
+    /* Header */
+    .header {
+      background: rgba(242,242,247,0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 16px 20px 12px;
+      border-bottom: 1px solid var(--separator);
+    }
+
+    .header h1 {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--text-primary);
+    }
+
+    .header-sub {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+      font-weight: 500;
+    }
+
+    /* Compose area */
+    .compose {
+      margin: 16px 16px 8px;
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    textarea {
+      width: 100%;
+      border: none;
+      outline: none;
+      resize: none;
+      padding: 16px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-primary);
+      background: transparent;
+      min-height: 90px;
+      line-height: 1.5;
+    }
+
+    textarea::placeholder { color: var(--text-tertiary); }
+
+    .compose-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px 12px;
+      border-top: 1px solid var(--separator);
+    }
+
+    .char-count {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      font-weight: 600;
+    }
+
+    .btn-save {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+      padding: 8px 20px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .btn-save:active { transform: scale(0.95); opacity: 0.85; }
+    .btn-save:disabled { background: var(--text-tertiary); cursor: not-allowed; }
+
+    /* Section label */
+    .section-label {
+      padding: 10px 20px 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+
+    /* Notes list */
+    .notes-list {
+      margin: 0 16px;
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .note-item {
+      position: relative;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 14px 16px;
+    }
+
+    .note-item:not(:last-child) {
+      border-bottom: 1px solid var(--separator);
+    }
+
+    .note-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .note-text {
+      font-size: 15px;
+      font-weight: 500;
+      line-height: 1.5;
+      color: var(--text-primary);
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+
+    .note-meta {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: 5px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* Action buttons */
+    .note-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+      align-items: flex-start;
+      padding-top: 2px;
+    }
+
+    .btn-edit, .btn-delete {
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 6px 12px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    .btn-edit {
+      background: #FFF3E0;
+      color: var(--warning);
+    }
+
+    .btn-edit:active { opacity: 0.7; transform: scale(0.95); }
+
+    .btn-delete {
+      background: var(--danger-soft);
+      color: var(--danger);
+    }
+
+    .btn-delete:active { opacity: 0.7; transform: scale(0.95); }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--text-tertiary);
+    }
+
+    .empty-icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-title { font-size: 17px; font-weight: 700; color: var(--text-secondary); }
+    .empty-desc { font-size: 13px; margin-top: 4px; font-weight: 500; }
+
+    /* Edit modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 200;
+      display: flex;
+      align-items: flex-end;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .modal-sheet {
+      background: var(--surface);
+      width: 100%;
+      border-radius: 20px 20px 0 0;
+      padding: 0 0 34px;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .modal-overlay.open .modal-sheet {
+      transform: translateY(0);
+    }
+
+    .sheet-handle {
+      width: 36px;
+      height: 4px;
+      background: var(--text-tertiary);
+      border-radius: 2px;
+      margin: 12px auto 16px;
+      opacity: 0.4;
+    }
+
+    .sheet-title {
+      font-size: 17px;
+      font-weight: 800;
+      text-align: center;
+      padding: 0 20px 16px;
+      color: var(--text-primary);
+      border-bottom: 1px solid var(--separator);
+    }
+
+    .sheet-body { padding: 16px; }
+
+    .edit-textarea {
+      width: 100%;
+      border: 1.5px solid var(--separator);
+      border-radius: var(--radius-sm);
+      outline: none;
+      padding: 12px 14px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-primary);
+      background: var(--surface2);
+      min-height: 120px;
+      resize: none;
+      line-height: 1.5;
+      transition: border-color 0.15s;
+    }
+
+    .edit-textarea:focus { 
+      border-color: var(--accent); 
+      background: var(--surface2); 
+    }
+
+    .sheet-actions {
+      display: flex;
+      gap: 10px;
+      padding: 12px 16px 0;
+    }
+
+    .btn-cancel {
+      flex: 1;
+      background: var(--bg);
+      color: var(--text-primary);
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-update {
+      flex: 2;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-cancel:active { opacity: 0.7; }
+    .btn-update:active { transform: scale(0.97); }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: var(--text-primary);
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 300;
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      white-space: nowrap;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast-undo { color: var(--accent); font-weight: 800; cursor: pointer; }
+
+    /* Count badge */
+    .count-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 800;
+      border-radius: 10px;
+      padding: 2px 8px;
+      margin-left: 6px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1C1C1E;
+        --surface: #2C2C2E;
+        --surface2: #3A3A3C;
+        --text-primary: #FFFFFF;
+        --text-secondary: #AEAEB2;
+        --text-tertiary: #636366;
+        --separator: #3A3A3C;
+        --accent-soft: #0A2040;
+      }
+      .btn-edit { background: #2E1F00; }
+    }
+  </style>
 </head>
 <body>
-  <h1>📝 Catatan Digital</h1>
 
-  <textarea id="note" placeholder="Tulis catatan..."></textarea>
-  <button id="save">Simpan</button>
+  <div class="header">
+    <h1>📝 Catatan <span id="note-count-badge"></span></h1>
+    <div class="header-sub">Tulis, simpan, dan kelola catatan kamu</div>
+  </div>
 
-  <ul id="list"></ul>
+  <div class="compose">
+    <textarea id="note" placeholder="Tulis catatan baru..." maxlength="500"></textarea>
+    <div class="compose-footer">
+      <span class="char-count" id="char-count">0 / 500</span>
+      <button class="btn-save" id="save" disabled>
+        <span>＋</span> Simpan
+      </button>
+    </div>
+  </div>
+
+  <div class="section-label">Semua Catatan</div>
+  <div class="notes-list" id="list"></div>
+
+  <!-- Edit Modal -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Edit Catatan</div>
+      <div class="sheet-body">
+        <textarea class="edit-textarea" id="edit-textarea" maxlength="500"></textarea>
+      </div>
+      <div class="sheet-actions">
+        <button class="btn-cancel" id="cancel-edit">Batal</button>
+        <button class="btn-update" id="confirm-edit">Simpan Perubahan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <span id="toast-msg">Catatan dihapus</span>
+    <span class="toast-undo" id="toast-undo">Urungkan</span>
+  </div>
 
   <script type="module" src="./src/main.js"></script>
 </body>
