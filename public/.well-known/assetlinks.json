@@ -1,0 +1,10 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "app.vercel.catatkan.twa",
+    "sha256_cert_fingerprints": [
+      "9A:4D:70:25:C0:07:70:6B:31:C3:99:EF:55:D3:FF:97:69:38:71:BF:84:07:C8:6B:4A:CC:63:8B:98:9C:50:39"
+    ]
+  }
+}]
