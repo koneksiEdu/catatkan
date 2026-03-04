@@ -11,12 +11,12 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg}']
       },
       manifest: {
-        name: 'Catatkan',
-        short_name: 'Catatkan',
+        name: 'MyCatat',
+        short_name: 'MyCatat',
         start_url: '/',
         display: 'standalone',
-        background_color: '#ffffff',
-        theme_color: '#f4c2b8',
+        background_color: '#eed7d7',
+        theme_color: '#F0C0A0',
         icons: [
           { src: '/icons/192.png', sizes: '192x192', type: 'image/png' },
           { src: '/icons/512.png', sizes: '512x512', type: 'image/png' }
