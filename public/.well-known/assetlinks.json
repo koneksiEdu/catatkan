@@ -2,9 +2,9 @@
   "relation": ["delegate_permission/common.handle_all_urls"],
   "target": {
     "namespace": "android_app",
-    "package_name": "app.vercel.catatkan.twa",
+    "package_name": "dev.pages.jadwalkan.twa",
     "sha256_cert_fingerprints": [
-      "9A:4D:70:25:C0:07:70:6B:31:C3:99:EF:55:D3:FF:97:69:38:71:BF:84:07:C8:6B:4A:CC:63:8B:98:9C:50:39"
+      "9B:35:F1:43:DF:A2:6F:90:AB:2B:5C:95:BD:7D:9B:5E:65:77:8C:49:54:72:4F:70:45:80:5E:48:42:B0:03:CA"
     ]
   }
 }]
