@@ -11,8 +11,8 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg}']
       },
       manifest: {
-        name: 'Catatkan',
-        short_name: 'Catatkan',
+        name: 'GoNulis - Catatan Digital',
+        short_name: 'GoNulis',
         start_url: '/',
         display: 'standalone',
         background_color: '#ffffff',
