@@ -11,8 +11,8 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg}']
       },
       manifest: {
-        name: 'Catatkan',
-        short_name: 'Catatkan',
+        name: 'Jadwalkan',
+        short_name: 'Jadwalkan',
         start_url: '/',
         display: 'standalone',
         background_color: '#ffffff',

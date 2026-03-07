@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
-  <title>Catatan Digital</title>
+  <title>To Do List</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
@@ -17,6 +17,8 @@
       --accent-soft: #E8F1FF;
       --danger: #FF3B30;
       --danger-soft: #FFF0EF;
+      --success: #34C759;
+      --success-soft: #EDFAF1;
       --warning: #FF9500;
       --text-primary: #1C1C1E;
       --text-secondary: #6E6E73;
@@ -63,63 +65,125 @@
       font-weight: 500;
     }
 
+    /* Progress bar */
+    .progress-wrap {
+      margin: 12px 16px 0;
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .progress-bar-bg {
+      flex: 1;
+      height: 8px;
+      background: var(--separator);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--success);
+      border-radius: 4px;
+      transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .progress-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    /* Filter tabs */
+    .filter-tabs {
+      display: flex;
+      gap: 8px;
+      padding: 10px 16px 4px;
+    }
+
+    .filter-tab {
+      flex: 1;
+      background: var(--surface);
+      border: none;
+      border-radius: var(--radius-sm);
+      padding: 8px 4px;
+      font-family: 'Nunito', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: center;
+    }
+
+    .filter-tab.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .filter-tab:active { transform: scale(0.95); }
+
     /* Compose area */
     .compose {
-      margin: 16px 16px 8px;
+      margin: 8px 16px 8px;
       background: var(--surface);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       overflow: hidden;
     }
 
-    textarea {
-      width: 100%;
+    .compose-input-row {
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    input[type="text"] {
+      flex: 1;
       border: none;
       outline: none;
-      resize: none;
       padding: 16px;
       font-family: 'Nunito', sans-serif;
       font-size: 15px;
       font-weight: 500;
       color: var(--text-primary);
       background: transparent;
-      min-height: 90px;
       line-height: 1.5;
     }
 
-    textarea::placeholder { color: var(--text-tertiary); }
+    input[type="text"]::placeholder { color: var(--text-tertiary); }
 
-    .compose-footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 8px 12px 12px;
-      border-top: 1px solid var(--separator);
-    }
-
-    .char-count {
-      font-size: 12px;
-      color: var(--text-tertiary);
-      font-weight: 600;
+    /* Priority selector */
+    .priority-select {
+      border: none;
+      outline: none;
+      background: transparent;
+      font-family: 'Nunito', sans-serif;
+      font-size: 18px;
+      cursor: pointer;
+      padding: 0 8px;
+      line-height: 1;
     }
 
     .btn-save {
       background: var(--accent);
       color: #fff;
       border: none;
-      border-radius: 20px;
-      padding: 8px 20px;
+      border-radius: 0;
+      padding: 16px 18px;
       font-family: 'Nunito', sans-serif;
-      font-size: 14px;
+      font-size: 22px;
       font-weight: 700;
       cursor: pointer;
       transition: all 0.15s ease;
-      display: flex;
-      align-items: center;
-      gap: 5px;
     }
 
-    .btn-save:active { transform: scale(0.95); opacity: 0.85; }
+    .btn-save:active { opacity: 0.75; }
     .btn-save:disabled { background: var(--text-tertiary); cursor: not-allowed; }
 
     /* Section label */
@@ -130,10 +194,13 @@
       color: var(--text-secondary);
       text-transform: uppercase;
       letter-spacing: 0.6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
-    /* Notes list */
-    .notes-list {
+    /* Todo list */
+    .todo-list {
       margin: 0 16px;
       background: var(--surface);
       border-radius: var(--radius);
@@ -141,36 +208,79 @@
       overflow: hidden;
     }
 
-    .note-item {
+    .todo-item {
       position: relative;
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       gap: 10px;
-      padding: 14px 16px;
+      padding: 12px 14px;
+      transition: opacity 0.2s ease;
     }
 
-    .note-item:not(:last-child) {
+    .todo-item.done {
+      opacity: 0.55;
+    }
+
+    .todo-item:not(:last-child) {
       border-bottom: 1px solid var(--separator);
     }
 
-    .note-body {
+    /* Checkbox */
+    .todo-check {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      border: 2.5px solid var(--separator);
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+      font-size: 13px;
+    }
+
+    .todo-check.checked {
+      background: var(--success);
+      border-color: var(--success);
+      color: #fff;
+    }
+
+    /* Priority dot */
+    .priority-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .priority-dot.high { background: var(--danger); }
+    .priority-dot.medium { background: var(--warning); }
+    .priority-dot.low { background: var(--success); }
+
+    .todo-body {
       flex: 1;
       min-width: 0;
     }
 
-    .note-text {
+    .todo-text {
       font-size: 15px;
-      font-weight: 500;
-      line-height: 1.5;
+      font-weight: 600;
+      line-height: 1.4;
       color: var(--text-primary);
       word-break: break-word;
-      white-space: pre-wrap;
     }
 
-    .note-meta {
+    .todo-item.done .todo-text {
+      text-decoration: line-through;
+      color: var(--text-tertiary);
+    }
+
+    .todo-meta {
       font-size: 11px;
       color: var(--text-tertiary);
-      margin-top: 5px;
+      margin-top: 3px;
       font-weight: 600;
       display: flex;
       align-items: center;
@@ -178,27 +288,22 @@
     }
 
     /* Action buttons */
-    .note-actions {
+    .todo-actions {
       display: flex;
-      gap: 6px;
+      gap: 5px;
       flex-shrink: 0;
-      align-items: flex-start;
-      padding-top: 2px;
+      align-items: center;
     }
 
     .btn-edit, .btn-delete {
       border: none;
       border-radius: var(--radius-sm);
-      padding: 6px 12px;
+      padding: 6px 10px;
       font-family: 'Nunito', sans-serif;
       font-size: 13px;
       font-weight: 700;
       cursor: pointer;
       transition: all 0.15s ease;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      white-space: nowrap;
     }
 
     .btn-edit {
@@ -277,7 +382,7 @@
 
     .sheet-body { padding: 16px; }
 
-    .edit-textarea {
+    .edit-input {
       width: 100%;
       border: 1.5px solid var(--separator);
       border-radius: var(--radius-sm);
@@ -288,16 +393,44 @@
       font-weight: 500;
       color: var(--text-primary);
       background: var(--surface2);
-      min-height: 120px;
       resize: none;
       line-height: 1.5;
       transition: border-color 0.15s;
+      margin-bottom: 10px;
     }
 
-    .edit-textarea:focus { 
-      border-color: var(--accent); 
-      background: var(--surface2); 
+    .edit-input:focus { border-color: var(--accent); }
+
+    .edit-priority-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
     }
+
+    .edit-priority-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    .priority-btn {
+      flex: 1;
+      border: 1.5px solid var(--separator);
+      border-radius: var(--radius-sm);
+      padding: 8px 4px;
+      background: var(--surface2);
+      font-family: 'Nunito', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+    }
+
+    .priority-btn.selected-high { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
+    .priority-btn.selected-medium { background: #FFF3E0; border-color: var(--warning); color: var(--warning); }
+    .priority-btn.selected-low { background: var(--success-soft); border-color: var(--success); color: var(--success); }
 
     .sheet-actions {
       display: flex;
@@ -374,6 +507,19 @@
       margin-left: 6px;
     }
 
+    .done-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--success-soft);
+      color: var(--success);
+      font-size: 11px;
+      font-weight: 800;
+      border-radius: 10px;
+      padding: 2px 8px;
+      margin-left: 4px;
+    }
+
     @media (prefers-color-scheme: dark) {
       :root {
         --bg: #1C1C1E;
@@ -384,6 +530,7 @@
         --text-tertiary: #636366;
         --separator: #3A3A3C;
         --accent-soft: #0A2040;
+        --success-soft: #0A2A14;
       }
       .btn-edit { background: #2E1F00; }
     }
@@ -392,30 +539,56 @@
 <body>
 
   <div class="header">
-    <h1>📝 Catatan <span id="note-count-badge"></span></h1>
-    <div class="header-sub">Tulis, simpan, dan kelola catatan kamu</div>
+    <h1>✅ Jadwalkan <span id="todo-count-badge"></span></h1>
+    <div class="header-sub">Kelola tugas kamu hari ini</div>
   </div>
 
+  <!-- Progress -->
+  <div class="progress-wrap">
+    <div class="progress-bar-bg">
+      <div class="progress-bar-fill" id="progress-fill" style="width: 0%"></div>
+    </div>
+    <span class="progress-label" id="progress-label">0 / 0 selesai</span>
+  </div>
+
+  <!-- Filter tabs -->
+  <div class="filter-tabs">
+    <button class="filter-tab active" data-filter="all">Semua</button>
+    <button class="filter-tab" data-filter="active">Aktif</button>
+    <button class="filter-tab" data-filter="done">Selesai</button>
+  </div>
+
+  <!-- Compose -->
   <div class="compose">
-    <textarea id="note" placeholder="Tulis catatan baru..." maxlength="500"></textarea>
-    <div class="compose-footer">
-      <span class="char-count" id="char-count">0 / 500</span>
-      <button class="btn-save" id="save" disabled>
-        <span>＋</span> Simpan
-      </button>
+    <div class="compose-input-row">
+      <select class="priority-select" id="priority-select" title="Prioritas">
+        <option value="medium">🟡</option>
+        <option value="high">🔴</option>
+        <option value="low">🟢</option>
+      </select>
+      <input type="text" id="todo-input" placeholder="Tambah tugas baru..." maxlength="200" />
+      <button class="btn-save" id="save" disabled title="Tambah">＋</button>
     </div>
   </div>
 
-  <div class="section-label">Semua Catatan</div>
-  <div class="notes-list" id="list"></div>
+  <div class="section-label">
+    <span id="section-title">Semua Tugas</span>
+  </div>
+  <div class="todo-list" id="list"></div>
 
   <!-- Edit Modal -->
   <div class="modal-overlay" id="modal-overlay">
     <div class="modal-sheet">
       <div class="sheet-handle"></div>
-      <div class="sheet-title">Edit Catatan</div>
+      <div class="sheet-title">Edit Tugas</div>
       <div class="sheet-body">
-        <textarea class="edit-textarea" id="edit-textarea" maxlength="500"></textarea>
+        <input type="text" class="edit-input" id="edit-input" maxlength="200" />
+        <div class="edit-priority-row">
+          <span class="edit-priority-label">Prioritas:</span>
+          <button class="priority-btn" data-p="high" id="p-high">🔴 Tinggi</button>
+          <button class="priority-btn" data-p="medium" id="p-medium">🟡 Sedang</button>
+          <button class="priority-btn" data-p="low" id="p-low">🟢 Rendah</button>
+        </div>
       </div>
       <div class="sheet-actions">
         <button class="btn-cancel" id="cancel-edit">Batal</button>
@@ -426,7 +599,7 @@
 
   <!-- Toast -->
   <div class="toast" id="toast">
-    <span id="toast-msg">Catatan dihapus</span>
+    <span id="toast-msg">Tugas dihapus</span>
     <span class="toast-undo" id="toast-undo">Urungkan</span>
   </div>
 

@@ -1,30 +1,37 @@
 import { openDB } from 'idb'
 
-const db = await openDB('notes-db', 1, {
+const db = await openDB('todo-db', 1, {
   upgrade(db) {
-    db.createObjectStore('notes', { keyPath: 'id' })
+    db.createObjectStore('todos', { keyPath: 'id' })
   }
 })
 
-const noteEl = document.getElementById('note')
+const inputEl = document.getElementById('todo-input')
 const listEl = document.getElementById('list')
 const saveBtn = document.getElementById('save')
-const charCount = document.getElementById('char-count')
 const modal = document.getElementById('modal-overlay')
-const editTextarea = document.getElementById('edit-textarea')
+const editInput = document.getElementById('edit-input')
 const toast = document.getElementById('toast')
 const toastMsg = document.getElementById('toast-msg')
-const countBadge = document.getElementById('note-count-badge')
+const countBadge = document.getElementById('todo-count-badge')
+const progressFill = document.getElementById('progress-fill')
+const progressLabel = document.getElementById('progress-label')
+const sectionTitle = document.getElementById('section-title')
+const prioritySelect = document.getElementById('priority-select')
 
 let editingId = null
-let deletedNote = null
+let editingPriority = 'medium'
+let deletedTodo = null
 let toastTimer = null
+let currentFilter = 'all'
 
-// Char counter
-noteEl.addEventListener('input', () => {
-  const len = noteEl.value.length
-  charCount.textContent = `${len} / 500`
-  saveBtn.disabled = len === 0
+// Enable save on input
+inputEl.addEventListener('input', () => {
+  saveBtn.disabled = inputEl.value.trim().length === 0
+})
+
+inputEl.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !saveBtn.disabled) saveTodo()
 })
 
 // Format relative time
@@ -47,82 +54,164 @@ function escapeHtml(str) {
     .replace(/>/g, '&gt;')
 }
 
+const priorityLabel = { high: 'Tinggi', medium: 'Sedang', low: 'Rendah' }
+const priorityIcon = { high: '🔴', medium: '🟡', low: '🟢' }
+
 async function load() {
   listEl.innerHTML = ''
-  const notes = await db.getAll('notes')
-  notes.sort((a, b) => b.createdAt - a.createdAt)
+  const allTodos = await db.getAll('todos')
+  allTodos.sort((a, b) => b.createdAt - a.createdAt)
+
+  const total = allTodos.length
+  const doneCount = allTodos.filter(t => t.done).length
+  const activeCount = total - doneCount
 
   // Update badge
-  countBadge.innerHTML = notes.length > 0
-    ? `<span class="count-badge">${notes.length}</span>`
+  countBadge.innerHTML = total > 0
+    ? `<span class="count-badge">${activeCount} aktif</span>`
     : ''
 
-  if (notes.length === 0) {
+  // Update progress
+  const pct = total === 0 ? 0 : Math.round((doneCount / total) * 100)
+  progressFill.style.width = pct + '%'
+  progressLabel.textContent = `${doneCount} / ${total} selesai`
+
+  // Filter
+  let todos = allTodos
+  if (currentFilter === 'active') {
+    todos = allTodos.filter(t => !t.done)
+    sectionTitle.textContent = 'Tugas Aktif'
+  } else if (currentFilter === 'done') {
+    todos = allTodos.filter(t => t.done)
+    sectionTitle.textContent = 'Tugas Selesai'
+  } else {
+    sectionTitle.textContent = 'Semua Tugas'
+  }
+
+  if (todos.length === 0) {
+    const emptyMessages = {
+      all: { icon: '📋', title: 'Belum ada tugas', desc: 'Tambahkan tugas baru di atas' },
+      active: { icon: '🎉', title: 'Semua selesai!', desc: 'Tidak ada tugas yang tersisa' },
+      done: { icon: '📭', title: 'Belum ada yang selesai', desc: 'Selesaikan tugas aktifmu dulu' },
+    }
+    const msg = emptyMessages[currentFilter]
     listEl.innerHTML = `
       <div class="empty-state">
-        <div class="empty-icon">🗒️</div>
-        <div class="empty-title">Belum ada catatan</div>
-        <div class="empty-desc">Tulis sesuatu di atas untuk memulai</div>
+        <div class="empty-icon">${msg.icon}</div>
+        <div class="empty-title">${msg.title}</div>
+        <div class="empty-desc">${msg.desc}</div>
       </div>`
     return
   }
 
-  notes.forEach(n => {
+  todos.forEach(t => {
     const item = document.createElement('div')
-    item.className = 'note-item'
-    item.dataset.id = n.id
+    item.className = 'todo-item' + (t.done ? ' done' : '')
+    item.dataset.id = t.id
     item.innerHTML = `
-      <div class="note-body">
-        <div class="note-text">${escapeHtml(n.text)}</div>
-        <div class="note-meta">
-          <span>🕐</span>
-          <span>${formatTime(n.createdAt)}</span>
+      <div class="todo-check ${t.done ? 'checked' : ''}" data-check="${t.id}">
+        ${t.done ? '✓' : ''}
+      </div>
+      <div class="priority-dot ${t.priority || 'medium'}"></div>
+      <div class="todo-body">
+        <div class="todo-text">${escapeHtml(t.text)}</div>
+        <div class="todo-meta">
+          <span>${priorityIcon[t.priority || 'medium']}</span>
+          <span>${priorityLabel[t.priority || 'medium']}</span>
+          <span>·</span>
+          <span>🕐 ${formatTime(t.createdAt)}</span>
         </div>
       </div>
-      <div class="note-actions">
-        <button class="btn-edit" data-id="${n.id}">✏️ Edit</button>
-        <button class="btn-delete" data-id="${n.id}">🗑️ Hapus</button>
+      <div class="todo-actions">
+        ${!t.done ? `<button class="btn-edit" data-id="${t.id}">✏️</button>` : ''}
+        <button class="btn-delete" data-id="${t.id}">🗑️</button>
       </div>
     `
     listEl.appendChild(item)
   })
 }
 
-// Delegated event listeners for edit and delete buttons
+// Delegated events
 listEl.addEventListener('click', async (e) => {
+  const checkEl = e.target.closest('[data-check]')
   const editBtn = e.target.closest('.btn-edit')
   const deleteBtn = e.target.closest('.btn-delete')
 
+  if (checkEl) {
+    const id = checkEl.dataset.check
+    const todo = await db.get('todos', id)
+    await db.put('todos', { ...todo, done: !todo.done })
+    load()
+    showToast(todo.done ? '↩️ Ditandai aktif' : '✅ Tugas selesai!', false)
+  }
+
   if (editBtn) {
     const id = editBtn.dataset.id
-    const note = await db.get('notes', id)
-    openEdit(note.id, note.text)
+    const todo = await db.get('todos', id)
+    openEdit(todo)
   }
 
   if (deleteBtn) {
     const id = deleteBtn.dataset.id
-    await deleteNote(id)
+    await deleteTodo(id)
   }
 })
 
-// Save
-saveBtn.addEventListener('click', async () => {
-  const text = noteEl.value.trim()
-  if (!text) return
-  await db.put('notes', { id: crypto.randomUUID(), text, createdAt: Date.now() })
-  noteEl.value = ''
-  charCount.textContent = '0 / 500'
-  saveBtn.disabled = true
-  load()
+// Filter tabs
+document.querySelectorAll('.filter-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'))
+    tab.classList.add('active')
+    currentFilter = tab.dataset.filter
+    load()
+  })
 })
 
-// Edit modal
-function openEdit(id, text) {
-  editingId = id
-  editTextarea.value = text
-  modal.classList.add('open')
-  setTimeout(() => editTextarea.focus(), 300)
+// Save
+saveBtn.addEventListener('click', saveTodo)
+
+async function saveTodo() {
+  const text = inputEl.value.trim()
+  if (!text) return
+  const priority = prioritySelect.value
+  await db.put('todos', {
+    id: crypto.randomUUID(),
+    text,
+    priority,
+    done: false,
+    createdAt: Date.now()
+  })
+  inputEl.value = ''
+  saveBtn.disabled = true
+  prioritySelect.value = 'medium'
+  load()
+  showToast('➕ Tugas ditambahkan', false)
 }
+
+// Edit modal
+function openEdit(todo) {
+  editingId = todo.id
+  editingPriority = todo.priority || 'medium'
+  editInput.value = todo.text
+  updatePriorityBtns()
+  modal.classList.add('open')
+  setTimeout(() => editInput.focus(), 300)
+}
+
+function updatePriorityBtns() {
+  ['high', 'medium', 'low'].forEach(p => {
+    const btn = document.getElementById(`p-${p}`)
+    btn.className = 'priority-btn'
+    if (p === editingPriority) btn.classList.add(`selected-${p}`)
+  })
+}
+
+document.querySelectorAll('.priority-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    editingPriority = btn.dataset.p
+    updatePriorityBtns()
+  })
+})
 
 modal.addEventListener('click', e => {
   if (e.target === modal) closeModal()
@@ -131,13 +220,13 @@ modal.addEventListener('click', e => {
 document.getElementById('cancel-edit').addEventListener('click', closeModal)
 
 document.getElementById('confirm-edit').addEventListener('click', async () => {
-  const newText = editTextarea.value.trim()
+  const newText = editInput.value.trim()
   if (!newText || !editingId) return
-  const note = await db.get('notes', editingId)
-  await db.put('notes', { ...note, text: newText })
+  const todo = await db.get('todos', editingId)
+  await db.put('todos', { ...todo, text: newText, priority: editingPriority })
   closeModal()
   load()
-  showToast('✅ Catatan diperbarui', false)
+  showToast('✅ Tugas diperbarui', false)
 })
 
 function closeModal() {
@@ -146,11 +235,11 @@ function closeModal() {
 }
 
 // Delete with undo
-async function deleteNote(id) {
-  deletedNote = await db.get('notes', id)
-  await db.delete('notes', id)
+async function deleteTodo(id) {
+  deletedTodo = await db.get('todos', id)
+  await db.delete('todos', id)
   load()
-  showToast('🗑️ Catatan dihapus', true)
+  showToast('🗑️ Tugas dihapus', true)
 }
 
 function showToast(msg, withUndo) {
@@ -160,14 +249,14 @@ function showToast(msg, withUndo) {
   toast.classList.add('show')
   toastTimer = setTimeout(() => {
     toast.classList.remove('show')
-    deletedNote = null
+    deletedTodo = null
   }, 3500)
 }
 
 document.getElementById('toast-undo').addEventListener('click', async () => {
-  if (deletedNote) {
-    await db.put('notes', deletedNote)
-    deletedNote = null
+  if (deletedTodo) {
+    await db.put('todos', deletedTodo)
+    deletedTodo = null
     toast.classList.remove('show')
     load()
   }
